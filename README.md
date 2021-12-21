@@ -22,8 +22,8 @@ The program will ask to choose an input video file; in this repo is provided a f
 Next, is required to enter the desidered new framerate of the output video (it must be higher than the input's one; ex: if the input is 30fps, then at least 31fps must be inserted).
 
 After this, the user has to choose between two interpolation modes:
-* `dup`: all the "missing frames" in the output video are equal to their predecessor (so, the frame *i* is a **dup**licate of the frame *i-1*) [FAST];
-* `blend`: all the "missing frames" in the output video are given by the mean between their predecessor and their successor (so, the frame *i* is extimated by an average between the frame *i-1* and the frame *i+1*) [SLOW].
+* `dup`: all the "missing frames" in the output video are equal to their predecessor (so, the frame *i* is a **dup**licate of the frame *i-1*) [**FAST**];
+* `blend`: all the "missing frames" in the output video are given by the mean between their predecessor and their successor (so, the frame *i* is extimated by an average between the frame *i-1* and the frame *i+1*) [**SLOW**].
 
 The output file name will have the form **`out_<new_framerate>fps_<interpolation_mode>.mp4`**.
 
