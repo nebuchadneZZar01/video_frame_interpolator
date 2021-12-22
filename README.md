@@ -9,8 +9,8 @@ In order execute this program in a Python environment, you need to install the f
 * numpy 
 
 ```bash
-pip opencv
-pip numpy
+pip install opencv-python
+pip install numpy
 ```
 
 ## Usage
