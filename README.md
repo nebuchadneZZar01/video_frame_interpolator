@@ -28,7 +28,8 @@ After this, the user has to choose between two interpolation modes:
 The output file name will have the form **`out_<new_framerate>fps_<interpolation_mode>.mp4`**.
 
 ## Known bugs
-* Giving an odd framerate output (i.e.: 31, 63, 77, ...) results in an output with different duration than the input.
+* Giving an odd framerate output (i.e.: 31, 63, 77, ...) results in an output with different duration than the input;
+* Commandline gives an ambiguous `[ERROR:0] global /.../opencv/modules/videoio/src/cap_ffmpeg_impl.hpp (2811) open VIDEOIO/FFMPEG: Failed to initialize VideoWriter`, but it actually calls it and successfully writes the output video.
 
 ## TO-DOs
 - [ ] support to framerates lower than the input one (for example, convert a 30fps video in a 15fps one);
