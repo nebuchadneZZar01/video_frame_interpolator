@@ -2,7 +2,7 @@
  # @author nebuchadnezzar
  # @email michele.ferro1998@libero.it
  # @create date 03-11-2021 12:51:37
- # @modify date 20-12-2021 18:19:34
+ # @modify date 25-12-2021 19:33:15
  # @desc video interpolation project (subject: Multimedia)
 """
 
@@ -86,6 +86,21 @@ def blend(in_a, new_length):
 
     return out_a
 
+# to reduce framerate
+def gen_reduced_out(in_a, new_length):
+    old_length = len(in_a)
+    step = round(old_length/new_length)                                           
+    
+    out_a = []
+
+    i = 0
+    while i < old_length:
+        out_a.append(in_a[i])
+        i = i + step
+
+    out_a = np.array(out_a)
+    return out_a
+
 
 # ---- VIDEO FUNCTIONS ----
 
@@ -132,17 +147,23 @@ def generate_video(interpolation_mode, fps_output, size):
 
 filepath = input("Input video file: ")
 frames_in, size, fps_in = read_video(filepath)
-while True:
-    fps_out = int(input("Video output FPS: "))
-    if fps_out <= fps_in: print("ERROR: FPS output must be higher than input!")
-    else: break
-interp_mode = input("Select interpolation mode [dup,blend]: ").lower()
-multiplier = round(fps_out/fps_in)
-l_frames_in = len(frames_in)
-l_frames_out = l_frames_in * multiplier
+fps_out = int(input("Video output FPS: "))
 
-if interp_mode == 'dup': frames_out = dup(frames_in, l_frames_out)
-elif interp_mode == 'blend': frames_out = blend(frames_in, l_frames_out)
+l_frames_in = len(frames_in)                            # number of total frames in input video
+
+if fps_out > fps_in:   
+    interp_mode = input("Select interpolation mode [dup,blend]: ").lower()
+    multiplier = round(fps_out/fps_in)
+    l_frames_out = l_frames_in * multiplier             # number of total frames in output video
+
+    if interp_mode == 'dup': frames_out = dup(frames_in, l_frames_out)
+    elif interp_mode == 'blend': frames_out = blend(frames_in, l_frames_out)
+else:
+    interp_mode = "reduced"
+    divisor = round(fps_in/fps_out)
+    l_frames_out = round(l_frames_in/divisor)
+
+    frames_out = gen_reduced_out(frames_in, l_frames_out)
 
 output_video = generate_video(interp_mode, fps_out, size)
 
