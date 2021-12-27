@@ -136,7 +136,7 @@ def read_video(filepath):
     return frames_in, size, fps_in
 
 def generate_video(interpolation_mode, fps_output, size):
-    fourcc = cv2.VideoWriter_fourcc(*'MPG4')
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')                                                # DIVX is the best encoder until now (mpg4 gave too much large output files)
     filename = 'out_' + str(fps_output) + 'fps_' + interpolation_mode + '.mp4'
     output_video = cv2.VideoWriter(filename, fourcc, fps_output, size, isColor = True)
 
