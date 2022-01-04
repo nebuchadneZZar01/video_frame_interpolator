@@ -36,10 +36,5 @@ The output file name will have the form **`out_<new_framerate>fps_<interpolation
 
 ## TO-DOs
 - [x] support to framerates lower than the input one (for example, convert a 30fps video in a 15fps one);
-<<<<<<< HEAD
 - [x] GUI in pyQt5;
 - [ ] `mci` ffmpeg command: **m**otion **c**ompensated **i**interpolation via **motion vectors**.
-=======
-- [ ] GUI in pyQt5;
-- [ ] `mci` ffmpeg command: **m**otion **c**ompensated **i**interpolation via **motion vectors**;
->>>>>>> c530f56e1fa551fed24f7ecbab17420e2498ddf9
