@@ -151,7 +151,6 @@ class MainWindow(qtw.QWidget):
         self.fps_spinbox.setDisabled(False)
         self.blend_radio.setDisabled(False)
         self.dup_radio.setDisabled(False)
-        self.btn.setDisabled(False)
         self.btn2.setDisabled(False)
 
     # updates the progress bar during the interpolation
@@ -182,6 +181,7 @@ class MainWindow(qtw.QWidget):
         
         if self.fdir:
             self.label2.setText(self.fdir)
+            self.btn.setDisabled(False)                         # enables RUN button only when there is a save file
 
     # EXECUTION
     def doInterpolation(self):
