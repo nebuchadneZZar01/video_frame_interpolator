@@ -11,6 +11,7 @@ In order execute this program in a Python environment, you need to install the f
 ```bash
 pip install numpy
 pip install opencv-python
+pip install pyqt5
 ```
 
 ## Usage
@@ -35,5 +36,5 @@ The output file name will have the form **`out_<new_framerate>fps_<interpolation
 
 ## TO-DOs
 - [x] support to framerates lower than the input one (for example, convert a 30fps video in a 15fps one);
-- [ ] `mci` ffmpeg command: **m**otion **c**ompensated **i**interpolation via **motion vectors**;
-- [ ] minor usability changes. 
+- [x] GUI in pyQt5;
+- [ ] `mci` ffmpeg command: **m**otion **c**ompensated **i**interpolation via **motion vectors**.
