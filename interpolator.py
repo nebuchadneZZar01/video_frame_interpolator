@@ -162,8 +162,11 @@ class MainWindow(qtw.QWidget):
     def getfile(self):
         fname, _ = qtw.QFileDialog.getOpenFileName(self, 'Open file', '.', "Video files (*.mp4)")
 
+        self.setCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))                                  # sets cursor in wait state when loading the input file
+
         if fname:
             self.frames_in, self.size, self.fps_in = read_video(fname)
+            self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))                             # restores cursor state
             hd_size = os.path.getsize(fname) / 1000000
 
             self.label1.setText(fname)
