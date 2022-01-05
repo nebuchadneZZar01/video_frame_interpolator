@@ -7,6 +7,7 @@ This Python program simulates *ffmpeg*'s `minterpolate` command.
 In order execute this program in a Python environment, you need to install the following modules using `pip`:
 * numpy
 * opencv
+* pyqt5
 
 ```bash
 pip install numpy
@@ -14,9 +15,9 @@ pip install opencv-python
 pip install pyqt5
 ```
 
-## Usage
+## Usage (to be updated, not the script has a GUI)
 ```bash
-python video_frame_interpolator.py
+python interpolator.py
 ```
 The program will ask to choose an input video file; in this repo is provided a file `asahi.mp4`, used as test during the developement of this script.
 
