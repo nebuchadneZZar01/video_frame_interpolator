@@ -15,7 +15,7 @@ pip install opencv-python
 pip install pyqt5
 ```
 
-## Usage (to be updated, not the script has a GUI)
+## Usage (to be updated, now the script has a GUI)
 ```bash
 python interpolator.py
 ```
