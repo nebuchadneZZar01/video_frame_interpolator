@@ -6,11 +6,9 @@
  # @desc video interpolation project (subject: Multimedia)
 """
 import os
-import PyQt5
 import numpy as np
 import cv2
 
-from typing import Text
 from PyQt5 import QtCore, QtGui, QtWidgets as qtw
 from PyQt5 import QtMultimedia as qtm
 from PyQt5.QtMultimediaWidgets import QVideoWidget
@@ -367,17 +365,13 @@ def read_video(filepath):
         if ret:
             if (frame is not None):
                 frames_in.append(frame)
-            # cv2.imshow('frame', frame)
         else: break
-
-        if cv2.waitKey(1) & 0xFF == ord('q'): break
     
     in_vid.release()
     return frames_in, size, fps_in
 
 def generate_video(filepath, fps_output, size):
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')                                                # DIVX is the best encoder until now (mpg4 gave too much large output files)
-    #filename = 'out_' + str(fps_output) + 'fps_' + interpolation_mode + '.mp4'
     output_video = cv2.VideoWriter(filepath, fourcc, fps_output, size, isColor = True)
 
     return output_video

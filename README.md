@@ -11,7 +11,7 @@ In order execute this program in a Python environment, you need to install the f
 
 ```bash
 pip install numpy
-pip install opencv-python
+pip install opencv-python-headless
 pip install pyqt5
 ```
 
