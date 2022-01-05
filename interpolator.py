@@ -199,12 +199,14 @@ class MainWindow(qtw.QWidget):
             self.frames_out = gen_reduced_out(self.frames_in, l_frames_out)
 
         output_video = generate_video(self.fdir, self.fps_spinbox.value(), self.size)
+        if self.pbar.value() == 100: qtw.QMessageBox.information(self, "Message", "Interpolation completed!")                # shows an informative maessagebox when the interpolation is completed
 
         for f in self.frames_out:
             output_video.write(f)
 
         output_video.release()
 
+# HELP POP-UP CLASS
 class HelpWindow(qtw.QWidget):
     def __init__(self):
         super().__init__()
@@ -212,6 +214,7 @@ class HelpWindow(qtw.QWidget):
         self.setWindowTitle("Help")
         self.setFixedSize(400,300)
         icon = QtGui.QIcon('icon.png')
+        self.setWindowIcon(icon)
         
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
         self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, False)
