@@ -29,13 +29,17 @@ class MainWindow(qtw.QWidget):
         self.pbar = qtw.QProgressBar()
         self.btn = qtw.QPushButton("RUN")
         self.helpbtn = qtw.QPushButton("HELP")
+        self.cmprbtn = qtw.QPushButton("COMPARE")
 
         self.btn.setDisabled(True)
+        self.cmprbtn.setDisabled(True)
 
         self.btn.clicked.connect(self.doInterpolation)
         self.helpbtn.clicked.connect(self.callHelp)
+        self.cmprbtn.clicked.connect(self.callCompare)
         
         layout.addWidget(self.pbar,5,0,1,3)
+        layout.addWidget(self.cmprbtn,6,0,1,1)
         layout.addWidget(self.helpbtn,6,1,1,1)
         layout.addWidget(self.btn,6,2)
 
@@ -136,6 +140,11 @@ class MainWindow(qtw.QWidget):
     def callHelp(self):
         self.help = HelpWindow()
         self.help.show()
+
+    # calls compare window
+    def callCompare(self):
+        self.compare = CompareWindow()
+        self.compare.show()
     
     # disables the GUI when there is not an input file
     def disableInput(self):
@@ -157,16 +166,16 @@ class MainWindow(qtw.QWidget):
     
     # calls the file selector to choose an input file
     def getfile(self):
-        fname, _ = qtw.QFileDialog.getOpenFileName(self, 'Open file', '.', "Video files (*.mp4)")
+        self.fname, _ = qtw.QFileDialog.getOpenFileName(self, 'Open file', '.', "Video files (*.mp4)")
 
         self.setCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))                                  # sets cursor in wait state when loading the input file
 
-        if fname:
-            self.frames_in, self.size, self.fps_in = read_video(fname)
+        if self.fname:
+            self.frames_in, self.size, self.fps_in = read_video(self.fname)
             self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))                             # restores cursor state
-            hd_size = os.path.getsize(fname) / 1000000
+            hd_size = os.path.getsize(self.fname) / 1000000
 
-            self.label1.setText(fname)
+            self.label1.setText(self.fname)
             self.width_out.setText(str(self.size[0]) + ' pixel')
             self.height_out.setText(str(self.size[1]) + ' pixel')
             self.framerate_out.setText(str(self.fps_in) + ' fps')
@@ -180,6 +189,14 @@ class MainWindow(qtw.QWidget):
         if self.fdir:
             self.label2.setText(self.fdir)
             self.btn.setDisabled(False)                         # enables RUN button only when there is a save file
+
+    # returns input filepath (used in comparison window)
+    def getFname(self):
+        return self.fname
+
+    # returns input filepath (used in comparison window)
+    def getFdir(self):
+        return self.fdir
 
     # EXECUTION
     def doInterpolation(self):
@@ -199,7 +216,9 @@ class MainWindow(qtw.QWidget):
             self.frames_out = gen_reduced_out(self.frames_in, l_frames_out)
 
         output_video = generate_video(self.fdir, self.fps_spinbox.value(), self.size)
-        if self.pbar.value() == 100: qtw.QMessageBox.information(self, "Message", "Interpolation completed!")                # shows an informative maessagebox when the interpolation is completed
+        if self.pbar.value() == 100: 
+            qtw.QMessageBox.information(self, "Message", "Interpolation completed!")                # shows an informative maessagebox when the interpolation is completed
+            self.cmprbtn.setDisabled(False)                                                         # enables compare button, which calls the comparison window between input and output file
 
         for f in self.frames_out:
             output_video.write(f)
@@ -240,6 +259,57 @@ class HelpWindow(qtw.QWidget):
         layout.addWidget(label2)
         layout.addWidget(btn)
         self.setLayout(layout)
+
+# COMPARE INPUT AND OUTPUT CLASS
+# to make the media player work, you have to install codecs in both Windows and GNU/Linux
+class CompareWindow(qtw.QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = qtw.QGridLayout()
+        self.setWindowTitle("Compare input/output")
+        self.setFixedSize(1000,500)
+        icon = QtGui.QIcon('icon.png')
+        self.setWindowIcon(icon)
+
+        label1 = qtw.QLabel("Input video:")
+        label2 = qtw.QLabel("Output video:")
+        self.mediaPlayer_input = qtm.QMediaPlayer(None, qtm.QMediaPlayer.VideoSurface)
+        self.mediaPlayer_output = qtm.QMediaPlayer(None, qtm.QMediaPlayer.VideoSurface)
+
+        label1.setFixedHeight(50)
+        label2.setFixedHeight(50)
+        
+        videoWidget_input = QVideoWidget()
+        videoWidget_output = QVideoWidget()
+
+        layout.addWidget(label1,0,0)
+        layout.addWidget(label2,0,1)
+        layout.addWidget(videoWidget_input,1,0)
+        layout.addWidget(videoWidget_output,1,1)
+
+        self.setLayout(layout)
+
+        self.mediaPlayer_input.setVideoOutput(videoWidget_input)
+        self.mediaPlayer_output.setVideoOutput(videoWidget_output)
+
+        self.openVideos()
+        self.playVideos()
+
+    def openVideos(self):
+        f_in = mw.getFname()
+        f_out = mw.getFdir()
+
+        if f_in and f_out:
+            self.mediaPlayer_input.setMedia(qtm.QMediaContent(QtCore.QUrl.fromLocalFile(f_in)))
+            self.mediaPlayer_output.setMedia(qtm.QMediaContent(QtCore.QUrl.fromLocalFile(f_out)))
+
+    def playVideos(self):
+        if self.mediaPlayer_input.state() == qtm.QMediaPlayer.PlayingState and self.mediaPlayer_output.state() == qtm.QMediaPlayer.PlayingState:
+            self.mediaPlayer_input.pause()
+            self.mediaPlayer_output.pause()
+        else:
+            self.mediaPlayer_input.play()
+            self.mediaPlayer_output.play()
 
 
 # ---- CALCULATION FUNCTIONS ----
