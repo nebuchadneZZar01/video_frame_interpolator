@@ -8,7 +8,6 @@ In order execute this program in a Python environment, you need to install the f
 * numpy
 * opencv
 * pyqt5
-* video codecs
 
 ```bash
 pip install numpy

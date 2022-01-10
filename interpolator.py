@@ -216,12 +216,15 @@ class MainWindow(qtw.QWidget):
             self.frames_out = gen_reduced_out(self.frames_in, l_frames_out)
 
         output_video = generate_video(self.fdir, self.fps_spinbox.value(), self.size)
-        if self.pbar.value() == 100: 
-            qtw.QMessageBox.information(self, "Message", "Interpolation completed!")                # shows an informative maessagebox when the interpolation is completed
-            self.cmprbtn.setDisabled(False)                                                         # enables compare button, which calls the comparison window between input and output file
 
         for f in self.frames_out:
             output_video.write(f)
+        
+        del(self.frames_out)                                                                        # to prevent memory leak of output array
+
+        if self.pbar.value() == 100: 
+            qtw.QMessageBox.information(self, "Message", "Interpolation completed!")                # shows an informative maessagebox when the interpolation is completed
+            self.cmprbtn.setDisabled(False)                                                         # enables compare button, which calls the comparison window between input and output file
 
         output_video.release()
 
@@ -276,16 +279,20 @@ class CompareWindow(qtw.QWidget):
         self.mediaPlayer_input = qtm.QMediaPlayer(None, qtm.QMediaPlayer.VideoSurface)
         self.mediaPlayer_output = qtm.QMediaPlayer(None, qtm.QMediaPlayer.VideoSurface)
 
-        label1.setFixedHeight(50)
-        label2.setFixedHeight(50)
+        label1.setFixedHeight(25)
+        label2.setFixedHeight(25)
         
         videoWidget_input = QVideoWidget()
         videoWidget_output = QVideoWidget()
+
+        replay_btn = qtw.QPushButton("REPLAY VIDEOS")
+        replay_btn.clicked.connect(self.replayVideos)
 
         layout.addWidget(label1,0,0)
         layout.addWidget(label2,0,1)
         layout.addWidget(videoWidget_input,1,0)
         layout.addWidget(videoWidget_output,1,1)
+        layout.addWidget(replay_btn,2,0,1,2)
 
         self.setLayout(layout)
 
@@ -310,6 +317,17 @@ class CompareWindow(qtw.QWidget):
         else:
             self.mediaPlayer_input.play()
             self.mediaPlayer_output.play()
+
+    def stopVideos(self):
+        self.mediaPlayer_input.stop()
+        self.mediaPlayer_output.stop()
+
+    def replayVideos(self):
+        self.stopVideos()
+        self.playVideos()
+
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.stopVideos()
 
 
 # ---- CALCULATION FUNCTIONS ----
@@ -408,6 +426,7 @@ def gen_reduced_out(in_a, new_length):
         out_a.append(in_a[i])
         MainWindow.updateProgressBar(mw, normalize(i,0,old_length-1))
         i = i + step
+    MainWindow.updateProgressBar(mw, 100)
 
     out_a = np.array(out_a)
     return out_a
@@ -419,7 +438,7 @@ def input_video(filepath):
     in_vid = cv2.VideoCapture(filepath)
     width = int(in_vid.get(3))                                                      # le info sulle dimensioni wxh stanno rispettivamente alle posizioni 3 e 4 dell'header
     height = int(in_vid.get(4))
-    fps_in = int(in_vid.get(5))
+    fps_in = int(round(in_vid.get(5)))
     frame_in_count = int(in_vid.get(cv2.CAP_PROP_FRAME_COUNT))
     duration_in = frame_in_count/fps_in
     size = (width, height)
@@ -444,7 +463,7 @@ def read_video(filepath):
     return frames_in, size, fps_in
 
 def generate_video(filepath, fps_output, size):
-    fourcc = cv2.VideoWriter_fourcc(*'DIVX')                                                # DIVX is the best encoder until now (mpg4 gave too much large output files)
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')                                                # mp4v is the best encoder until now (mpg4 gave too much large output files)
     output_video = cv2.VideoWriter(filepath, fourcc, fps_output, size, isColor = True)
 
     return output_video
