@@ -181,6 +181,8 @@ class MainWindow(qtw.QWidget):
             self.framerate_out.setText(str(self.fps_in) + ' fps')
             self.size_out.setText(str(hd_size) + ' MB')
             self.enableInput()
+        if not(self.fname):
+            self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor)) 
 
     # calls the file selector to save the output file
     def saveFile(self):
