@@ -120,6 +120,7 @@ class MainWindow(qtw.QWidget):
         self.fps_spinbox = qtw.QSpinBox(value=60, minimum=1, maximum=300)
         self.dup_radio = qtw.QRadioButton(text="dup [FAST - LOW QUALITY]")
         self.blend_radio = qtw.QRadioButton(text="blend [SLOWER - GOOD QUALITY]")
+        self.mci_radio = qtw.QRadioButton(text="mci [SLOWEST - BEST QUALITY]")
 
         self.dup_radio.setChecked(True)
 
@@ -127,7 +128,8 @@ class MainWindow(qtw.QWidget):
         grid.addWidget(label,0,0)
         grid.addWidget(self.fps_spinbox,0,1,1,2)
         grid.addWidget(self.dup_radio,1,0,1,5)
-        grid.addWidget(self.blend_radio,2,0,1,5)    
+        grid.addWidget(self.blend_radio,2,0,1,5)
+        grid.addWidget(self.mci_radio,3,0,1,5)    
 
         self.disableInput()  
         
@@ -151,6 +153,7 @@ class MainWindow(qtw.QWidget):
         self.fps_spinbox.setDisabled(True)
         self.blend_radio.setDisabled(True)
         self.dup_radio.setDisabled(True)
+        self.mci_radio.setDisabled(True)
         self.btn2.setDisabled(True)
 
     # enables the GUI when there is an input file
@@ -158,6 +161,7 @@ class MainWindow(qtw.QWidget):
         self.fps_spinbox.setDisabled(False)
         self.blend_radio.setDisabled(False)
         self.dup_radio.setDisabled(False)
+        self.mci_radio.setDisabled(False)
         self.btn2.setDisabled(False)
 
     # updates the progress bar during the interpolation
@@ -211,6 +215,7 @@ class MainWindow(qtw.QWidget):
 
             if self.dup_radio.isChecked(): self.frames_out = dup(self.frames_in, l_frames_out)
             elif self.blend_radio.isChecked(): self.frames_out = blend(self.frames_in, l_frames_out)
+            elif self.mci_radio.isChecked(): self.frames_out = mci(self.frames_in, l_frames_out)
         else:
             divisor = round(self.fps_in/fps_out)
             l_frames_out = round(l_frames_in/divisor)
@@ -414,6 +419,97 @@ def blend(in_a, new_length):
                 tmp[i] = np.mean(np.array([tmp[i-1],np.zeros(zero_shape)], dtype='object'), axis=0).astype('uint8')
         #print(out_a[new_length-step:new_length])
 
+    return out_a
+
+def mci(in_a, new_length):
+    out_a, old_length, step = gen_out(in_a, new_length)
+    file = open('input.txt', 'w+')
+
+    # first case: fill the "empty frame" with the average between his successor and his predecessor
+    if round(new_length/old_length) == 2:
+        fake_new_length = old_length*2
+        for i in range(fake_new_length):
+            MainWindow.updateProgressBar(mw, normalize(i,0,fake_new_length-1))
+            if out_a[i] is not None: pass
+            elif i+1 < fake_new_length:
+                prev = cv2.cvtColor(out_a[i-1],cv2.COLOR_BGR2GRAY)                            # have to convert in gray in order to have
+                next = cv2.cvtColor(out_a[i+1],cv2.COLOR_BGR2GRAY)                            # same channel to calculate motion vectors
+                
+                flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+
+                # --- VISUALIZATION --- 
+                hsv = np.zeros_like(out_a[i-1])
+                hsv[...,1] = 255
+                
+                mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
+
+                hsv[...,0] = ang*180/np.pi/2
+                hsv[...,2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+                bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
+                #cv2.imwrite('\img' + 'prev_' + str(i) + '.jpg', bgr)
+                #file.write('file \'prev_' + str(i) + '.jpg\'\n')
+                # --- END VISUALIZATION --
+
+                h, w = flow.shape[:2]
+                flow = -flow
+                flow[:,:,0] += np.arange(w)
+                flow[:,:,1] += np.arange(h)[:,np.newaxis]
+
+                out_a[i] = cv2.remap(out_a[i-1], flow, None, cv2.INTER_LINEAR)
+            else:
+                prev = cv2.cvtColor(out_a[i-1],cv2.COLOR_BGR2GRAY)
+                next = cv2.cvtColor(np.zeros_like(out_a[i-1]),cv2.COLOR_BGR2GRAY)
+
+                flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+
+                h, w = flow.shape[:2]
+                flow = -flow
+                flow[:,:,0] += np.arange(w)
+                flow[:,:,1] += np.arange(h)[:,np.newaxis]
+
+                out_a[i] = cv2.remap(out_a[i-1], flow, None, cv2.INTER_LINEAR)
+    else:
+        for i in range(new_length):
+            if i == 0: pass
+            # dividing the list in chunks
+            else:
+                j = i * step
+                if j < new_length:
+                    tmp = out_a[j-step:j+1]
+                    # for every chunk, calculate the average
+                    for z in range(len(tmp)):
+                        if tmp[z] is None:
+                            prev = cv2.cvtColor(tmp[z-1],cv2.COLOR_BGR2GRAY)                            # have to convert in gray in order to have
+                            next = cv2.cvtColor(tmp[-1],cv2.COLOR_BGR2GRAY)                             # same channel to calculate motion vectors
+
+                            flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+
+                            h, w = flow.shape[:2]
+                            flow = -flow
+                            flow[:,:,0] += np.arange(w)
+                            flow[:,:,1] += np.arange(h)[:,np.newaxis]
+                            
+                            tmp[z] = cv2.remap(tmp[z-1], flow, None, cv2.INTER_LINEAR)
+            MainWindow.updateProgressBar(mw, normalize(i,0,new_length-1))
+        tmp = out_a[new_length-step:new_length]
+        # print(tmp)
+        # remaining odd frames: average with black
+        for i in range(len(tmp)):
+            if i == 0: pass
+            else:
+                prev = cv2.cvtColor(tmp[i-1],cv2.COLOR_BGR2GRAY)                        
+                next = cv2.cvtColor(np.zeros_like(tmp[i-1]),cv2.COLOR_BGR2GRAY)
+
+                flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+
+                h, w = flow.shape[:2]
+                flow = -flow
+                flow[:,:,0] += np.arange(w)
+                flow[:,:,1] += np.arange(h)[:,np.newaxis]
+                
+                tmp[i] = cv2.remap(tmp[i-1], flow, None, cv2.INTER_LINEAR)                  
+    
     return out_a
 
 # to reduce framerate
