@@ -38,3 +38,5 @@ When the interpolation is completed, the user can also compare the input and the
 - [x] support to framerates lower than the input one (for example, convert a 30fps video in a 15fps one);
 - [x] GUI in pyQt5;
 - [x] `mci` ffmpeg command: **m**otion **c**ompensated **i**interpolation via **motion vectors**.
+- [ ] Lucas-Kanade extimation method (alternative to Gunnar-Farneback);
+- [ ] more sophisticated interpolation algorithm.
