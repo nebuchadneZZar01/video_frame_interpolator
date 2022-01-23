@@ -24,7 +24,7 @@ From the GUI (written in Qt5), the user can choose an input video file; in this 
 If the choosen framerate is higher than the input one, the user has to choose between three interpolation modes:
 * `dup`: all the "missing frames" in the output video are equal to their predecessor (so, the frame *i* is a **dup**licate of the frame *i-1*) [**FAST**];
 * `blend`: all the "missing frames" in the output video are **blend**ed calculating the mean between their predecessor and their successor (so, the frame *i* is extimated by an average between the frame *i-1* and the frame *i+1*) [**SLOW**];
-* `mci`: all the "missing frames" in the output video are extimated using a **m**otion **c**ompentation **i**nterpolation (so, the motion vectors from anchor frame *i-1* to target frame *i+1* are calculated to extimate the missing frame *i*). As for now, to extimate the motion vectors, is used the Gunnar-Farneback's Dense Optical Flow algorithm [**SLOWEST**].
+* `mci`: all the "missing frames" in the output video are extimated using a **m**otion **c**ompensated **i**nterpolation (so, the motion vectors from anchor frame *i-1* to target frame *i+1* are calculated to extimate the missing frame *i*). As for now, to extimate the Optical Flow, can be used the Gunnar-Farneback's dense method or the Lucas-Kanade sparse method [**SLOWEST**].
 
 If, instead, the choosen framerate is lower than the input one, the output will result in a video with a **reduced** framerate (for example, from 30fps to 5fps).
 
@@ -37,6 +37,6 @@ When the interpolation is completed, the user can also compare the input and the
 ## TO-DOs
 - [x] support to framerates lower than the input one (for example, convert a 30fps video in a 15fps one);
 - [x] GUI in pyQt5;
-- [x] `mci` ffmpeg command: **m**otion **c**ompensated **i**interpolation via **motion vectors**.
-- [ ] Lucas-Kanade extimation method (alternative to Gunnar-Farneback);
+- [x] `mci` ffmpeg command: **m**otion **c**ompensated **i**nterpolation via **motion vectors**.
+- [x] Lucas-Kanade extimation method (alternative to Gunnar-Farneback);
 - [ ] more sophisticated interpolation algorithm.

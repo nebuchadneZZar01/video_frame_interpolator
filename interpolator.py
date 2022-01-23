@@ -2,7 +2,7 @@
  # @author nebuchadnezzar
  # @email michele.ferro1998@libero.it
  # @create date 03-11-2021 12:51:37
- # @modify date 04-01-2022 23:29:45
+ # @modify date 23-01-2022 11:40:55
  # @desc video interpolation project (subject: Multimedia)
 """
 import os
@@ -27,9 +27,9 @@ class MainWindow(qtw.QWidget):
         layout.addWidget(self.createInterpolationGroup(),1,1,1,2)
 
         self.pbar = qtw.QProgressBar()
-        self.btn = qtw.QPushButton("RUN")
-        self.helpbtn = qtw.QPushButton("HELP")
-        self.cmprbtn = qtw.QPushButton("COMPARE")
+        self.btn = qtw.QPushButton("Run")
+        self.helpbtn = qtw.QPushButton("Help")
+        self.cmprbtn = qtw.QPushButton("Compare")
 
         self.btn.setDisabled(True)
         self.cmprbtn.setDisabled(True)
@@ -44,7 +44,7 @@ class MainWindow(qtw.QWidget):
         layout.addWidget(self.btn,6,2)
 
         self.setWindowTitle(title)
-        self.setFixedSize(500,300)
+        self.setFixedSize(500,320)
         self.setWindowIcon(icon)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
         self.setLayout(layout)
@@ -120,7 +120,8 @@ class MainWindow(qtw.QWidget):
         self.fps_spinbox = qtw.QSpinBox(value=60, minimum=1, maximum=300)
         self.dup_radio = qtw.QRadioButton(text="dup [FAST - LOW QUALITY]")
         self.blend_radio = qtw.QRadioButton(text="blend [SLOWER - GOOD QUALITY]")
-        self.mci_radio = qtw.QRadioButton(text="mci [SLOWEST - BEST QUALITY]")
+        self.mci_gf_radio = qtw.QRadioButton(text="mci (Farneback) [SLOWEST - BEST QUALITY]")
+        self.mci_lk_radio = qtw.QRadioButton(text="mci (Lucas-Kanade) [SLOWEST - BEST QUALITY]")
 
         self.dup_radio.setChecked(True)
 
@@ -129,7 +130,8 @@ class MainWindow(qtw.QWidget):
         grid.addWidget(self.fps_spinbox,0,1,1,2)
         grid.addWidget(self.dup_radio,1,0,1,5)
         grid.addWidget(self.blend_radio,2,0,1,5)
-        grid.addWidget(self.mci_radio,3,0,1,5)    
+        grid.addWidget(self.mci_gf_radio,3,0,1,5)
+        grid.addWidget(self.mci_lk_radio,4,0,1,5)    
 
         self.disableInput()  
         
@@ -153,7 +155,8 @@ class MainWindow(qtw.QWidget):
         self.fps_spinbox.setDisabled(True)
         self.blend_radio.setDisabled(True)
         self.dup_radio.setDisabled(True)
-        self.mci_radio.setDisabled(True)
+        self.mci_gf_radio.setDisabled(True)
+        self.mci_lk_radio.setDisabled(True)
         self.btn2.setDisabled(True)
 
     # enables the GUI when there is an input file
@@ -161,7 +164,8 @@ class MainWindow(qtw.QWidget):
         self.fps_spinbox.setDisabled(False)
         self.blend_radio.setDisabled(False)
         self.dup_radio.setDisabled(False)
-        self.mci_radio.setDisabled(False)
+        self.mci_gf_radio.setDisabled(False)
+        self.mci_lk_radio.setDisabled(False)
         self.btn2.setDisabled(False)
 
     # updates the progress bar during the interpolation
@@ -206,6 +210,8 @@ class MainWindow(qtw.QWidget):
 
     # EXECUTION
     def doInterpolation(self):
+        self.btn.setDisabled(True)
+        self.label1.deselect()                                  # to prevent text selection bug in input filepath label
         l_frames_in = len(self.frames_in)                       # number of total frames in input video
         fps_out = self.fps_spinbox.value()
 
@@ -215,7 +221,8 @@ class MainWindow(qtw.QWidget):
 
             if self.dup_radio.isChecked(): self.frames_out = dup(self.frames_in, l_frames_out)
             elif self.blend_radio.isChecked(): self.frames_out = blend(self.frames_in, l_frames_out)
-            elif self.mci_radio.isChecked(): self.frames_out = mci(self.frames_in, l_frames_out)
+            elif self.mci_gf_radio.isChecked(): self.frames_out = mci(self.frames_in, l_frames_out, "GF")
+            elif self.mci_lk_radio.isChecked(): self.frames_out = mci(self.frames_in, l_frames_out, "LK")
         else:
             divisor = round(self.fps_in/fps_out)
             l_frames_out = round(l_frames_in/divisor)
@@ -232,6 +239,7 @@ class MainWindow(qtw.QWidget):
         if self.pbar.value() == 100: 
             qtw.QMessageBox.information(self, "Message", "Interpolation completed!")                # shows an informative maessagebox when the interpolation is completed
             self.cmprbtn.setDisabled(False)                                                         # enables compare button, which calls the comparison window between input and output file
+            self.btn.setDisabled(False)
 
         output_video.release()
 
@@ -241,7 +249,7 @@ class HelpWindow(qtw.QWidget):
         super().__init__()
         layout = qtw.QVBoxLayout()
         self.setWindowTitle("Help")
-        self.setFixedSize(400,300)
+        self.setFixedSize(450,300)
         icon = QtGui.QIcon('icon.png')
         self.setWindowIcon(icon)
         
@@ -252,10 +260,11 @@ class HelpWindow(qtw.QWidget):
         help_text = 'This Python program simulates <b>ffmpeg</b>\'s minterpolate command on a given video file.<br>\
                     After choosing an input video file and the output destination folder, if the desired new framerate is higher than the input\'s one, you can choose between two interpolation modes:<br>\
                     - <b>dup</b>: all the \"missing frames\" in the output video are equal to their predecessor (so, the frame <i>i</i> is a duplicate of the frame <i>i-1</i>) [<b>FAST</b>];<br>\
-                    - <b>blend</b>: all the \"missing frames\" in the output video are blended calculating the mean between their predecessor and their successor (so, the frame <i>i</i> is extimated by an average between the frame <i>i-1</i> and the frame <i>i+1</i>) <b>[SLOW]</b>.\
+                    - <b>blend</b>: all the \"missing frames\" in the output video are blended calculating the mean between their predecessor and their successor (so, the frame <i>i</i> is extimated by an average between the frame <i>i-1</i> and the frame <i>i+1</i>) <b>[SLOW]</b>;<br>\
+                    - <b>mci</b>: all the \"missing frames\" in the output video are extimated using a <b>m</b>otion <b>c</b>ompensated <i>i</i>nterpolation (so, the motion vectors from anchor frame <i>i-1</i> to target frame <i>i+1</i> are calculated to extimate the missing frame <i>i</i>). As for now, to extimate the Optical Flow, can be used the Gunnar-Farneback dense method or the Lucas-Kanade sparse method [<b>SLOWEST</b>]<br>\
                     If, instead, the chosen new framerate is lower than the input\'s one, the selection of the mode will be ignored and the needless intermediate frames will be discarded, so that the new video will result in a lower framerate.'
         
-        auth_text = '@<b>nebuchadneZZar01</b> (Michele Ferro) ~ V1.0 [2022]'
+        auth_text = '@<b>nebuchadneZZar01</b> (Michele Ferro) ~ V1.1 [2022]'
 
         label1 = qtw.QLabel(help_text)
         label2 = qtw.QLabel(auth_text)
@@ -421,53 +430,71 @@ def blend(in_a, new_length):
 
     return out_a
 
-def mci(in_a, new_length):
+# motion compensation via dense optical flow (Gunnar-Farneback method)
+def motion_compensation_Farneback(anchor_frame, target_frame):
+    prev = cv2.cvtColor(anchor_frame,cv2.COLOR_BGR2GRAY)                            # have to convert in gray in order to have
+    next = cv2.cvtColor(target_frame,cv2.COLOR_BGR2GRAY)                            # same channel to calculate motion vectors
+    
+    flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+
+    # --- VISUALIZATION --- 
+    hsv = np.zeros_like(anchor_frame)
+    hsv[...,1] = 255
+    
+    mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
+
+    hsv[...,0] = ang*180/np.pi/2
+    hsv[...,2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
+    bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
+    #cv2.imwrite('\img' + 'prev_' + str(i) + '.jpg', bgr)
+    #file.write('file \'prev_' + str(i) + '.jpg\'\n')
+    # --- END VISUALIZATION --
+
+    h, w = flow.shape[:2]
+    flow = -flow
+    flow[:,:,0] += np.arange(w)
+    flow[:,:,1] += np.arange(h)[:,np.newaxis]
+
+    return flow
+
+def motion_compensation_Lucas_Kanade(anchor_frame, target_frame):
+    grid_y, grid_x = np.mgrid[0:anchor_frame.shape[0]:1, 0:anchor_frame.shape[1]:1]
+    p0 = np.stack((grid_x.flatten(),grid_y.flatten()),axis=1).astype(np.float32)
+
+    p1, status, err = cv2.calcOpticalFlowPyrLK(anchor_frame, target_frame, p0, None)
+
+    flow = np.reshape(p1 - p0, (anchor_frame.shape[0], anchor_frame.shape[1], 2))
+
+    h, w = flow.shape[:2]
+    flow = -flow
+    flow[:,:,0] += np.arange(w)
+    flow[:,:,1] += np.arange(h)[:,np.newaxis]
+
+    return flow
+
+def motion_compensation(anchor_frame, target_frame, mode):
+    if mode == "GF": flow = motion_compensation_Farneback(anchor_frame, target_frame)
+    elif mode == "LK": flow = motion_compensation_Lucas_Kanade(anchor_frame, target_frame)
+
+    return flow
+
+# mci mode: the frame i is given by the motion compensation between frame i-1 (its predecessor) and frame i+1 (its successor)
+def mci(in_a, new_length, mode):
     out_a, old_length, step = gen_out(in_a, new_length)
     file = open('input.txt', 'w+')
 
-    # first case: fill the "empty frame" with the average between his successor and his predecessor
+    # first case: fill the "empty frame" with the motion compensation between his successor and his predecessor
     if round(new_length/old_length) == 2:
         fake_new_length = old_length*2
         for i in range(fake_new_length):
             MainWindow.updateProgressBar(mw, normalize(i,0,fake_new_length-1))
             if out_a[i] is not None: pass
             elif i+1 < fake_new_length:
-                prev = cv2.cvtColor(out_a[i-1],cv2.COLOR_BGR2GRAY)                            # have to convert in gray in order to have
-                next = cv2.cvtColor(out_a[i+1],cv2.COLOR_BGR2GRAY)                            # same channel to calculate motion vectors
-                
-                flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-
-                # --- VISUALIZATION --- 
-                hsv = np.zeros_like(out_a[i-1])
-                hsv[...,1] = 255
-                
-                mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
-
-                hsv[...,0] = ang*180/np.pi/2
-                hsv[...,2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
-                bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-
-                #cv2.imwrite('\img' + 'prev_' + str(i) + '.jpg', bgr)
-                #file.write('file \'prev_' + str(i) + '.jpg\'\n')
-                # --- END VISUALIZATION --
-
-                h, w = flow.shape[:2]
-                flow = -flow
-                flow[:,:,0] += np.arange(w)
-                flow[:,:,1] += np.arange(h)[:,np.newaxis]
-
+                flow = motion_compensation(out_a[i-1], out_a[i+1], mode)
                 out_a[i] = cv2.remap(out_a[i-1], flow, None, cv2.INTER_LINEAR)
             else:
-                prev = cv2.cvtColor(out_a[i-1],cv2.COLOR_BGR2GRAY)
-                next = cv2.cvtColor(np.zeros_like(out_a[i-1]),cv2.COLOR_BGR2GRAY)
-
-                flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-
-                h, w = flow.shape[:2]
-                flow = -flow
-                flow[:,:,0] += np.arange(w)
-                flow[:,:,1] += np.arange(h)[:,np.newaxis]
-
+                flow = motion_compensation(out_a[i-1], np.zeros_like(out_a[i-1]), mode)
                 out_a[i] = cv2.remap(out_a[i-1], flow, None, cv2.INTER_LINEAR)
     else:
         for i in range(new_length):
@@ -477,37 +504,18 @@ def mci(in_a, new_length):
                 j = i * step
                 if j < new_length:
                     tmp = out_a[j-step:j+1]
-                    # for every chunk, calculate the average
+                    # for every chunk, calculate the motion compensation
                     for z in range(len(tmp)):
                         if tmp[z] is None:
-                            prev = cv2.cvtColor(tmp[z-1],cv2.COLOR_BGR2GRAY)                            # have to convert in gray in order to have
-                            next = cv2.cvtColor(tmp[-1],cv2.COLOR_BGR2GRAY)                             # same channel to calculate motion vectors
-
-                            flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-
-                            h, w = flow.shape[:2]
-                            flow = -flow
-                            flow[:,:,0] += np.arange(w)
-                            flow[:,:,1] += np.arange(h)[:,np.newaxis]
-                            
+                            flow = motion_compensation(tmp[z-1], tmp[-1], mode)
                             tmp[z] = cv2.remap(tmp[z-1], flow, None, cv2.INTER_LINEAR)
             MainWindow.updateProgressBar(mw, normalize(i,0,new_length-1))
         tmp = out_a[new_length-step:new_length]
-        # print(tmp)
-        # remaining odd frames: average with black
+        # remaining odd frames: motion compensation with black
         for i in range(len(tmp)):
             if i == 0: pass
             else:
-                prev = cv2.cvtColor(tmp[i-1],cv2.COLOR_BGR2GRAY)                        
-                next = cv2.cvtColor(np.zeros_like(tmp[i-1]),cv2.COLOR_BGR2GRAY)
-
-                flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
-
-                h, w = flow.shape[:2]
-                flow = -flow
-                flow[:,:,0] += np.arange(w)
-                flow[:,:,1] += np.arange(h)[:,np.newaxis]
-                
+                flow = motion_compensation(tmp[i-1], np.zeros_like(tmp[i-1]), mode)
                 tmp[i] = cv2.remap(tmp[i-1], flow, None, cv2.INTER_LINEAR)                  
     
     return out_a
