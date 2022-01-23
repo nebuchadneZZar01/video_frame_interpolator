@@ -438,6 +438,8 @@ def motion_compensation_Farneback(anchor_frame, target_frame):
     flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
 
     # --- VISUALIZATION --- 
+    """
+    file = open('input.txt', 'w+')
     hsv = np.zeros_like(anchor_frame)
     hsv[...,1] = 255
     
@@ -447,8 +449,8 @@ def motion_compensation_Farneback(anchor_frame, target_frame):
     hsv[...,2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
     bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
-    #cv2.imwrite('\img' + 'prev_' + str(i) + '.jpg', bgr)
-    #file.write('file \'prev_' + str(i) + '.jpg\'\n')
+    cv2.imwrite('\img' + 'prev_' + str(i) + '.jpg', bgr)
+    file.write('file \'prev_' + str(i) + '.jpg\'\n')"""
     # --- END VISUALIZATION --
 
     h, w = flow.shape[:2]
@@ -482,7 +484,6 @@ def motion_compensation(anchor_frame, target_frame, mode):
 # mci mode: the frame i is given by the motion compensation between frame i-1 (its predecessor) and frame i+1 (its successor)
 def mci(in_a, new_length, mode):
     out_a, old_length, step = gen_out(in_a, new_length)
-    file = open('input.txt', 'w+')
 
     # first case: fill the "empty frame" with the motion compensation between his successor and his predecessor
     if round(new_length/old_length) == 2:
