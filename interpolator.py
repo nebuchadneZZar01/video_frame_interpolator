@@ -6,6 +6,8 @@
  # @desc video interpolation project (subject: Multimedia)
 """
 import os
+from statistics import mode
+from matplotlib.pyplot import draw
 import numpy as np
 import cv2
 
@@ -431,15 +433,45 @@ def blend(in_a, new_length):
     return out_a
 
 # motion compensation via dense optical flow (Gunnar-Farneback method)
-def motion_compensation_Farneback(anchor_frame, target_frame):
+def motion_compensation_Farneback(anchor_frame, target_frame, frame_num):
     prev = cv2.cvtColor(anchor_frame,cv2.COLOR_BGR2GRAY)                            # have to convert in gray in order to have
     next = cv2.cvtColor(target_frame,cv2.COLOR_BGR2GRAY)                            # same channel to calculate motion vectors
     
     flow = cv2.calcOpticalFlowFarneback(prev, next, None, 0.5, 3, 15, 3, 5, 1.2, 0)
 
-    # --- VISUALIZATION --- 
-    """
-    file = open('input.txt', 'w+')
+    #ov_visualization(anchor_frame, flow, frame_num)
+
+    h, w = flow.shape[:2]
+    flow = -flow
+    flow[:,:,0] += np.arange(w)
+    flow[:,:,1] += np.arange(h)[:,np.newaxis]
+
+    return flow
+
+def motion_compensation_Lucas_Kanade(anchor_frame, target_frame, frame_num):
+    grid_y, grid_x = np.mgrid[0:anchor_frame.shape[0]:1, 0:anchor_frame.shape[1]:1]
+    p0 = np.stack((grid_x.flatten(),grid_y.flatten()),axis=1).astype(np.float32)
+
+    p1, status, err = cv2.calcOpticalFlowPyrLK(anchor_frame, target_frame, p0, None)
+
+    flow = np.reshape(p1 - p0, (anchor_frame.shape[0], anchor_frame.shape[1], 2))
+
+    #ov_visualization(anchor_frame, flow, frame_num)
+
+    h, w = flow.shape[:2]
+    flow = -flow
+    flow[:,:,0] += np.arange(w)
+    flow[:,:,1] += np.arange(h)[:,np.newaxis]
+
+    return flow
+
+def motion_compensation(anchor_frame, target_frame, frame_num, mode):
+    if mode == "GF": flow = motion_compensation_Farneback(anchor_frame, target_frame, frame_num)
+    elif mode == "LK": flow = motion_compensation_Lucas_Kanade(anchor_frame, target_frame, frame_num)
+
+    return flow
+
+def draw_hsv(anchor_frame, flow):
     hsv = np.zeros_like(anchor_frame)
     hsv[...,1] = 255
     
@@ -449,37 +481,14 @@ def motion_compensation_Farneback(anchor_frame, target_frame):
     hsv[...,2] = cv2.normalize(mag, None, 0, 255, cv2.NORM_MINMAX)
     bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
-    cv2.imwrite('\img' + 'prev_' + str(i) + '.jpg', bgr)
-    file.write('file \'prev_' + str(i) + '.jpg\'\n')"""
-    # --- END VISUALIZATION --
+    return bgr
 
-    h, w = flow.shape[:2]
-    flow = -flow
-    flow[:,:,0] += np.arange(w)
-    flow[:,:,1] += np.arange(h)[:,np.newaxis]
-
-    return flow
-
-def motion_compensation_Lucas_Kanade(anchor_frame, target_frame):
-    grid_y, grid_x = np.mgrid[0:anchor_frame.shape[0]:1, 0:anchor_frame.shape[1]:1]
-    p0 = np.stack((grid_x.flatten(),grid_y.flatten()),axis=1).astype(np.float32)
-
-    p1, status, err = cv2.calcOpticalFlowPyrLK(anchor_frame, target_frame, p0, None)
-
-    flow = np.reshape(p1 - p0, (anchor_frame.shape[0], anchor_frame.shape[1], 2))
-
-    h, w = flow.shape[:2]
-    flow = -flow
-    flow[:,:,0] += np.arange(w)
-    flow[:,:,1] += np.arange(h)[:,np.newaxis]
-
-    return flow
-
-def motion_compensation(anchor_frame, target_frame, mode):
-    if mode == "GF": flow = motion_compensation_Farneback(anchor_frame, target_frame)
-    elif mode == "LK": flow = motion_compensation_Lucas_Kanade(anchor_frame, target_frame)
-
-    return flow
+def ov_visualization(anchor_frame, flow, frame_num):
+    fname = 'img\\' + "HSV" + '\ov_' + str(frame_num) + '.jpg'
+    vis = draw_hsv(anchor_frame,flow)
+    
+    print(fname)
+    cv2.imwrite(fname, vis)
 
 # mci mode: the frame i is given by the motion compensation between frame i-1 (its predecessor) and frame i+1 (its successor)
 def mci(in_a, new_length, mode):
@@ -492,10 +501,10 @@ def mci(in_a, new_length, mode):
             MainWindow.updateProgressBar(mw, normalize(i,0,fake_new_length-1))
             if out_a[i] is not None: pass
             elif i+1 < fake_new_length:
-                flow = motion_compensation(out_a[i-1], out_a[i+1], mode)
+                flow = motion_compensation(out_a[i-1], out_a[i+1], i, mode)
                 out_a[i] = cv2.remap(out_a[i-1], flow, None, cv2.INTER_LINEAR)
             else:
-                flow = motion_compensation(out_a[i-1], np.zeros_like(out_a[i-1]), mode)
+                flow = motion_compensation(out_a[i-1], np.zeros_like(out_a[i-1]), i, mode)
                 out_a[i] = cv2.remap(out_a[i-1], flow, None, cv2.INTER_LINEAR)
     else:
         for i in range(new_length):
@@ -508,7 +517,7 @@ def mci(in_a, new_length, mode):
                     # for every chunk, calculate the motion compensation
                     for z in range(len(tmp)):
                         if tmp[z] is None:
-                            flow = motion_compensation(tmp[z-1], tmp[-1], mode)
+                            flow = motion_compensation(tmp[z-1], tmp[-1], i, mode)
                             tmp[z] = cv2.remap(tmp[z-1], flow, None, cv2.INTER_LINEAR)
             MainWindow.updateProgressBar(mw, normalize(i,0,new_length-1))
         tmp = out_a[new_length-step:new_length]
@@ -516,7 +525,7 @@ def mci(in_a, new_length, mode):
         for i in range(len(tmp)):
             if i == 0: pass
             else:
-                flow = motion_compensation(tmp[i-1], np.zeros_like(tmp[i-1]), mode)
+                flow = motion_compensation(tmp[i-1], np.zeros_like(tmp[i-1]), i, mode)
                 tmp[i] = cv2.remap(tmp[i-1], flow, None, cv2.INTER_LINEAR)                  
     
     return out_a
