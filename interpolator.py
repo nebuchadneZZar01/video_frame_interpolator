@@ -6,6 +6,7 @@
  # @desc video interpolation project (subject: Multimedia)
 """
 import os
+import platform                                     # for GUI size
 from statistics import mode
 from matplotlib.pyplot import draw
 import numpy as np
@@ -22,7 +23,6 @@ class MainWindow(qtw.QWidget):
         super().__init__()
         layout = qtw.QGridLayout()
         title = "Video interpolator"
-        icon = QtGui.QIcon('icon.png')
 
         layout.addWidget(self.createInputOutputGroup(),0,0,1,3)
         layout.addWidget(self.createInputInfoGroup(),1,0)
@@ -46,8 +46,8 @@ class MainWindow(qtw.QWidget):
         layout.addWidget(self.btn,6,2)
 
         self.setWindowTitle(title)
-        self.setFixedSize(500,320)
-        self.setWindowIcon(icon)
+        if platform.system() == 'Windows': self.setFixedSize(500,320)
+        elif platform.system() == 'Linux': self.setFixedSize(600,375)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
         self.setLayout(layout)
         self.show()
@@ -252,8 +252,6 @@ class HelpWindow(qtw.QWidget):
         layout = qtw.QVBoxLayout()
         self.setWindowTitle("Help")
         self.setFixedSize(450,300)
-        icon = QtGui.QIcon('icon.png')
-        self.setWindowIcon(icon)
         
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
         self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, False)
@@ -289,8 +287,6 @@ class CompareWindow(qtw.QWidget):
         layout = qtw.QGridLayout()
         self.setWindowTitle("Compare input/output")
         self.setFixedSize(1000,500)
-        icon = QtGui.QIcon('icon.png')
-        self.setWindowIcon(icon)
 
         label1 = qtw.QLabel("Input video:")
         label2 = qtw.QLabel("Output video:")
