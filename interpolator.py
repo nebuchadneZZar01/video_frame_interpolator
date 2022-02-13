@@ -7,8 +7,6 @@
 """
 import os
 import platform                                     # for GUI size
-from statistics import mode
-from matplotlib.pyplot import draw
 import numpy as np
 import cv2
 
