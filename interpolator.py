@@ -45,7 +45,7 @@ class MainWindow(qtw.QWidget):
 
         self.setWindowTitle(title)
         if platform.system() == 'Windows': self.setFixedSize(500,320)
-        elif platform.system() == 'Linux': self.setFixedSize(600,375)
+        else: self.setFixedSize(600,375)
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
         self.setLayout(layout)
         self.show()
@@ -249,7 +249,8 @@ class HelpWindow(qtw.QWidget):
         super().__init__()
         layout = qtw.QVBoxLayout()
         self.setWindowTitle("Help")
-        self.setFixedSize(450,300)
+        if platform.system() == 'Windows': self.setFixedSize(450,300)
+        else: self.setFixedSize(550,400)
         
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
         self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, False)
