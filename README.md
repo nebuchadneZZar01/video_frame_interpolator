@@ -4,7 +4,7 @@ This is a project for a university subject (Multimedia).
 This Python program simulates *ffmpeg*'s `minterpolate` command.
 
 ## Requirements
-In order execute this program in a Python environment, you need to install the following modules using `pip`:
+In order execute this program in your Python environment, you need to install the following modules using `pip`:
 * numpy
 * opencv
 * pyqt5
@@ -14,6 +14,8 @@ pip install numpy
 pip install opencv-python-headless
 pip install pyqt5
 ```
+
+Alternatively, you can find in Realeases the executables for Linux, Windows and MacOS. 
 
 ## Usage
 ```bash
