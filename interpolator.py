@@ -2,7 +2,7 @@
  # @author nebuchadnezzar
  # @email michele.ferro1998@libero.it
  # @create date 03-11-2021 12:51:37
- # @modify date 13-02-2022 18:01:33
+ # @modify date 17-02-2022 15:14:35
  # @desc video interpolation project (subject: Multimedia)
 """
 import os
@@ -118,10 +118,10 @@ class MainWindow(qtw.QWidget):
         groupBox = qtw.QGroupBox("Interpolation")
         label = qtw.QLabel("FPS:")
         self.fps_spinbox = qtw.QSpinBox(value=60, minimum=1, maximum=300)
-        self.dup_radio = qtw.QRadioButton(text="dup [FAST - LOW QUALITY]")
-        self.blend_radio = qtw.QRadioButton(text="blend [SLOWER - GOOD QUALITY]")
-        self.mci_gf_radio = qtw.QRadioButton(text="mci (Farneback) [SLOWEST - BEST QUALITY]")
-        self.mci_lk_radio = qtw.QRadioButton(text="mci (Lucas-Kanade) [SLOWEST - BEST QUALITY]")
+        self.dup_radio = qtw.QRadioButton(text="Duplication")
+        self.blend_radio = qtw.QRadioButton(text="Blending")
+        self.mci_gf_radio = qtw.QRadioButton(text="Farneback motion compensation")
+        self.mci_lk_radio = qtw.QRadioButton(text="Lucas-Kanade motion compensation")
 
         self.dup_radio.setChecked(True)
 
@@ -298,7 +298,7 @@ class CompareWindow(qtw.QWidget):
         videoWidget_input = QVideoWidget()
         videoWidget_output = QVideoWidget()
 
-        replay_btn = qtw.QPushButton("REPLAY VIDEOS")
+        replay_btn = qtw.QPushButton("Replay")
         replay_btn.clicked.connect(self.replayVideos)
 
         layout.addWidget(label1,0,0)
