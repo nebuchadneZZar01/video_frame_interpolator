@@ -125,8 +125,8 @@ farneback_psnr = pd.DataFrame({'farneback_psnr': [farneback_min_psnr, farneback_
 farneback_ssim = pd.DataFrame({'farneback_ssim': [farneback_min_ssim, farneback_max_ssim, farneback_avg_ssim]})
 
 lk_mse = pd.DataFrame({'lk_mse': [lk_min_mse, lk_max_mse, lk_avg_mse]})
-lk_psnr = pd.DataFrame({'lk_psnr': [lk_min_psnr, lk_avg_psnr, lk_max_psnr]})
-lk_ssim = pd.DataFrame({'lk_ssim': [lk_min_ssim, lk_avg_ssim, lk_max_ssim]})
+lk_psnr = pd.DataFrame({'lk_psnr': [lk_min_psnr, lk_max_psnr, lk_avg_psnr]})
+lk_ssim = pd.DataFrame({'lk_ssim': [lk_min_ssim, lk_max_ssim, lk_avg_ssim]})
 
 df = pd.concat([dup_mse, dup_psnr, dup_ssim,\
                 blend_mse, blend_psnr, blend_ssim,\
