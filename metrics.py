@@ -1,7 +1,4 @@
-from bz2 import compress
-from email import header
 import cv2
-from matplotlib.pyplot import axis
 import numpy as np
 import pandas as pd
 from skimage.metrics import structural_similarity as ssim
