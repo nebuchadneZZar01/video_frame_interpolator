@@ -84,34 +84,68 @@ def SSIM_video(original_video, interpolated_video):
 ov_path = input("Original video path: ")
 ov_frames, size = read_video(ov_path)
 
+# DUPLICATION
+
 dup_path = input("Duplication video path: ")
 dup_frames, size = read_video(dup_path)
 
-blend_path = input("Blending video path: ")
-blend_frames, size = read_video(blend_path)
-
-farneback_path = input("Farneback video path: ")
-farneback_frames, size = read_video(farneback_path)
-
-lk_path = input("Lucas-Kanade video path: ")
-lk_frames, size = read_video(lk_path)
+print("Calculating metrics for Duplication method...")
 
 dup_min_mse, dup_max_mse, dup_avg_mse = MSE_video(ov_frames, dup_frames)
 dup_min_psnr, dup_max_psnr, dup_avg_psnr = PSNR_video(ov_frames, dup_frames, size)
 dup_min_ssim, dup_max_ssim, dup_avg_ssim = SSIM_video(ov_frames, dup_frames)
 
+print("Calculation complete! Freeing memory...")
+
+del(dup_frames)
+
+
+# BLENDING
+
+blend_path = input("Blending video path: ")
+blend_frames, size = read_video(blend_path)
+
+print("Calculating metrics for Blending method...")
+
 blend_min_mse, blend_max_mse, blend_avg_mse = MSE_video(ov_frames, blend_frames)
 blend_min_psnr, blend_max_psnr, blend_avg_psnr = PSNR_video(ov_frames, blend_frames, size)
 blend_min_ssim, blend_max_ssim, blend_avg_ssim = SSIM_video(ov_frames, blend_frames)
+
+print("Calculation complete! Freeing memory...")
+
+del(blend_frames)
+
+
+# FARNEBACK
+
+farneback_path = input("Farneback video path: ")
+farneback_frames, size = read_video(farneback_path)
+
+print("Calculating metrics for Farnebäck method...")
 
 farneback_min_mse, farneback_max_mse, farneback_avg_mse = MSE_video(ov_frames, farneback_frames)
 farneback_min_psnr, farneback_max_psnr, farneback_avg_psnr = PSNR_video(ov_frames, farneback_frames, size)
 farneback_min_ssim, farneback_max_ssim, farneback_avg_ssim = SSIM_video(ov_frames, farneback_frames)
 
+print("Calculation complete! Freeing memory...")
+
+del(farneback_frames)
+
+
+# LUCAS-KANADE
+
+lk_path = input("Lucas-Kanade video path: ")
+lk_frames, size = read_video(lk_path)
+
+print("Calculating metrics for Farnebäck method...")
+
 lk_min_mse, lk_max_mse, lk_avg_mse = MSE_video(ov_frames, lk_frames)
 lk_min_psnr, lk_max_psnr, lk_avg_psnr = PSNR_video(ov_frames, lk_frames, size)
 lk_min_ssim, lk_max_ssim, lk_avg_ssim = SSIM_video(ov_frames, lk_frames)
 
+print("Calculation complete! Freeing memory...")
+
+print("Creating final data frame...")
 dup_mse = pd.DataFrame({'dup_mse': [dup_min_mse, dup_max_mse, dup_avg_mse]})
 dup_psnr = pd.DataFrame({'dup_psnr': [dup_min_psnr, dup_max_psnr, dup_avg_psnr]})
 dup_ssim = pd.DataFrame({'dup_ssim': [dup_min_ssim, dup_max_ssim, dup_avg_ssim]})
