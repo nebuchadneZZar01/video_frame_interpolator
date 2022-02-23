@@ -17,6 +17,8 @@ pip install pyqt5
 
 Alternatively, you can find in Realeases the executables for Linux, Windows and MacOS. 
 
+In the repo is also provided a script used to calculate quality metrics between two videos of the same framerate, for a qualitative comparison.
+
 ## Usage
 ```bash
 python interpolator.py
@@ -41,4 +43,3 @@ When the interpolation is completed, the user can also compare the input and the
 - [x] GUI in pyQt5;
 - [x] `mci` ffmpeg command: **m**otion **c**ompensated **i**nterpolation via **motion vectors**.
 - [x] Lucas-Kanade extimation method (alternative to Gunnar-Farneback);
-- [ ] more sophisticated interpolation algorithm.
