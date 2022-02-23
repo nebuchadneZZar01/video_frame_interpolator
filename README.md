@@ -33,7 +33,7 @@ If, instead, the choosen framerate is lower than the input one, the output will 
 When the interpolation is completed, the user can also compare the input and the output videos to see the differences between them.
 
 ## Known bugs
-* Giving an odd framerate output (i.e.: 31, 63, 77, ...) results in an output with different duration than the input;
+* ~~Giving an odd framerate output (i.e.: 31, 63, 77, ...) results in an output with different duration than the input;~~
 * ~~Commandline gives an ambiguous `[ERROR:0] global /.../opencv/modules/videoio/src/cap_ffmpeg_impl.hpp (2811) open VIDEOIO/FFMPEG: Failed to initialize VideoWriter`, but it actually calls it and successfully writes the output video.~~
 
 ## TO-DOs
