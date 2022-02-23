@@ -4,7 +4,7 @@ This is a project for a university subject (Multimedia).
 This Python program simulates *ffmpeg*'s `minterpolate` command.
 
 ## Requirements
-In order execute this program in your Python environment, you need to install the following modules using `pip`:
+After cloning this repo, in order execute the program in your Python environment you need to install the following modules using `pip`:
 * numpy
 * opencv
 * pyqt5
@@ -21,9 +21,9 @@ In the repo is also provided a script used to calculate quality metrics between 
 
 ## Usage
 ```bash
-python interpolator.py
+python3 interpolator.py
 ```
-From the GUI (written in Qt5), the user can choose an input video file; in this repo is provided a file `asahi.mp4`, used as test during the developement of this script. Next, the user has to enter the output filename with the extension `.mp4`. The user can now choose the desired new framerate of the output video (higher or lower than the input one).
+From the GUI (written in Qt5 with `pyqt5`), the user can choose an input video file; in this repo is provided a file `asahi.mp4`, used as test during the developement of this script. Next, the user has to enter the output filename with the extension `.mp4`. The user can then choose the desired new framerate of the output video (higher or lower than the input one).
 
 If the choosen framerate is higher than the input one, the user has to choose between three interpolation modes:
 * `dup`: all the "missing frames" in the output video are equal to their predecessor (so, the frame *i* is a **dup**licate of the frame *i-1*) [**FAST**];
