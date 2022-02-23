@@ -1,4 +1,4 @@
-# video_frame_interpolator
+# Video Frame Interpolator
 This is a project for a university subject (Multimedia).
 
 This Python program simulates *ffmpeg*'s `minterpolate` command.
