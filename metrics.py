@@ -39,7 +39,8 @@ def PSNR(original, interpolated, size):
     return psnr
 
 def PSNR_video(original_video, interpolated_video, size):
-    video_length = len(interpolated_video)
+    if len(original_video) > len(interpolated_video): video_length = len(interpolated_video)
+    else: video_length = len(original_video)
 
     PSNRs = [ ]
 
@@ -53,7 +54,8 @@ def PSNR_video(original_video, interpolated_video, size):
     return min_psnr, max_psnr, avg_psnr
 
 def MSE_video(original_video, interpolated_video):
-    video_length = len(interpolated_video)
+    if len(original_video) > len(interpolated_video): video_length = len(interpolated_video)
+    else: video_length = len(original_video)
 
     MSEs = [ ]
 
@@ -67,7 +69,8 @@ def MSE_video(original_video, interpolated_video):
     return min_mse, max_mse, avg_mse
 
 def SSIM_video(original_video, interpolated_video):
-    video_length = len(interpolated_video)
+    if len(original_video) > len(interpolated_video): video_length = len(interpolated_video)
+    else: video_length = len(original_video)
 
     SSIMs = [ ]
 
