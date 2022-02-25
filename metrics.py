@@ -137,7 +137,7 @@ del(farneback_frames)
 lk_path = input("Lucas-Kanade video path: ")
 lk_frames, size = read_video(lk_path)
 
-print("Calculating metrics for Farnebäck method...")
+print("Calculating metrics for Lucas-Kanade method...")
 
 lk_min_mse, lk_max_mse, lk_avg_mse = MSE_video(ov_frames, lk_frames)
 lk_min_psnr, lk_max_psnr, lk_avg_psnr = PSNR_video(ov_frames, lk_frames, size)

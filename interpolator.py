@@ -2,17 +2,20 @@
  # @author nebuchadnezzar
  # @email michele.ferro1998@libero.it
  # @create date 03-11-2021 12:51:37
- # @modify date 17-02-2022 15:14:35
+ # @modify date 25-02-2022 15:32:27
  # @desc video interpolation project (subject: Multimedia)
 """
 import os
-import platform                                     # for GUI size
 import numpy as np
 import cv2
+import gc
+from memory_profiler import profile
 
 from PyQt5 import QtCore, QtGui, QtWidgets as qtw
 from PyQt5 import QtMultimedia as qtm
 from PyQt5.QtMultimediaWidgets import QVideoWidget
+
+qtw.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)      # fix graphical issues on hidpi displays, enabling auto-scaling for higher resolutions
 
 # --- GUI CLASS ---
 
@@ -44,8 +47,7 @@ class MainWindow(qtw.QWidget):
         layout.addWidget(self.btn,6,2)
 
         self.setWindowTitle(title)
-        if platform.system() == 'Windows': self.setFixedSize(500,320)
-        else: self.setFixedSize(600,375)
+        self.setFixedSize(self.size())
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
         self.setLayout(layout)
         self.show()
@@ -237,11 +239,11 @@ class MainWindow(qtw.QWidget):
         del(self.frames_out)                                                                        # to prevent memory leak of output array
 
         if self.pbar.value() == 100: 
+            output_video.release()
             qtw.QMessageBox.information(self, "Message", "Interpolation completed!")                # shows an informative maessagebox when the interpolation is completed
             self.cmprbtn.setDisabled(False)                                                         # enables compare button, which calls the comparison window between input and output file
             self.btn.setDisabled(False)
-
-        output_video.release()
+            
 
 # HELP POP-UP CLASS
 class HelpWindow(qtw.QWidget):
@@ -249,8 +251,7 @@ class HelpWindow(qtw.QWidget):
         super().__init__()
         layout = qtw.QVBoxLayout()
         self.setWindowTitle("Help")
-        if platform.system() == 'Windows': self.setFixedSize(450,300)
-        else: self.setFixedSize(550,400)
+        self.setFixedSize(self.size())
         
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
         self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, False)
@@ -285,7 +286,7 @@ class CompareWindow(qtw.QWidget):
         super().__init__()
         layout = qtw.QGridLayout()
         self.setWindowTitle("Compare input/output")
-        self.setFixedSize(1000,500)
+        self.setFixedSize(self.size())
 
         label1 = qtw.QLabel("Input video:")
         label2 = qtw.QLabel("Output video:")
@@ -556,18 +557,19 @@ def input_video(filepath):
 
     return in_vid, size, fps_in
 
+#@profile
 def read_video(filepath):
     in_vid, size, fps_in = input_video(filepath)
-    ret, frame = in_vid.read()
 
     frames_in = []
 
     while (in_vid.isOpened()):
-        prev_frame = frame[:]
         ret, frame = in_vid.read()
         if ret:
             if (frame is not None):
                 frames_in.append(frame)
+                del(frame)
+                gc.collect()
         else: break
     
     in_vid.release()
