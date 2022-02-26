@@ -2,16 +2,17 @@
  # @author nebuchadnezzar
  # @email michele.ferro1998@libero.it
  # @create date 03-11-2021 12:51:37
- # @modify date 26-02-2022 14:26:17
+ # @modify date 26-02-2022 20:26:17
  # @desc video interpolation project (subject: Multimedia)
 """
 import os
 import numpy as np
-import cv2
-import gc
-#from memory_profiler import profile
+import pims                                                                     # to read files
+import skvideo.io as skv                                                        # to write files (better compatibility, don't suffers of memory leaks)
+import cv2                                                                      # for mci functions
+from memory_profiler import profile
 
-from PyQt5 import QtCore, QtGui, QtWidgets as qtw
+from PyQt5 import Qt, QtCore, QtGui, QtWidgets as qtw
 from PyQt5 import QtMultimedia as qtm
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 
@@ -146,14 +147,15 @@ class MainWindow(qtw.QWidget):
     def callHelp(self):
         self.help = HelpWindow()
         self.help.show()
-        self.help.setFixedSize(self.compare.size())
+        self.help.setFixedSize(self.help.size())
 
     # calls compare window
     def callCompare(self):
         self.compare = CompareWindow()
         self.compare.show()
-        self.compare.setFixedSize(self.compare.size())
-    
+        self.compare.openVideos()
+        self.compare.playVideos()
+        
     # disables the GUI when there is not an input file
     def disableInput(self):
         self.fps_spinbox.setDisabled(True)
@@ -181,8 +183,11 @@ class MainWindow(qtw.QWidget):
         self.fname, _ = qtw.QFileDialog.getOpenFileName(self, 'Open file', '.', "Video files (*.mp4)")
 
         self.setCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))                                  # sets cursor in wait state when loading the input file
+        
+        self.frames_in = [ ]
 
         if self.fname:
+            del[self.frames_in]                                                              # prevent memory leak when another file is choosen 
             self.frames_in, self.size, self.fps_in = read_video(self.fname)
             self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))                             # restores cursor state
             hd_size = os.path.getsize(self.fname) / 1000000
@@ -233,15 +238,15 @@ class MainWindow(qtw.QWidget):
 
             self.frames_out = gen_reduced_out(self.frames_in, l_frames_out)
 
-        output_video = generate_video(self.fdir, self.fps_spinbox.value(), self.size)
+        output_video = skv.FFmpegWriter(self.fdir, inputdict={'-r': str(self.fps_spinbox.value())})
 
         for f in self.frames_out:
-            output_video.write(f)
+            output_video.writeFrame(f)
+        output_video.close()
         
         del(self.frames_out)                                                                        # to prevent memory leak of output array
 
         if self.pbar.value() == 100: 
-            output_video.release()
             qtw.QMessageBox.information(self, "Message", "Interpolation completed!")                # shows an informative maessagebox when the interpolation is completed
             self.cmprbtn.setDisabled(False)                                                         # enables compare button, which calls the comparison window between input and output file
             self.btn.setDisabled(False)
@@ -287,7 +292,7 @@ class CompareWindow(qtw.QWidget):
         super().__init__()
         layout = qtw.QGridLayout()
         self.setWindowTitle("Compare input/output")
-        self.setFixedSize(self.size())
+        self.resize(800,500)
 
         label1 = qtw.QLabel("Input video:")
         label2 = qtw.QLabel("Output video:")
@@ -313,9 +318,6 @@ class CompareWindow(qtw.QWidget):
 
         self.mediaPlayer_input.setVideoOutput(videoWidget_input)
         self.mediaPlayer_output.setVideoOutput(videoWidget_output)
-
-        self.openVideos()
-        self.playVideos()
 
     def openVideos(self):
         f_in = mw.getFname()
@@ -343,7 +345,7 @@ class CompareWindow(qtw.QWidget):
 
     def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
         self.stopVideos()
-
+        self.destroy()
 
 # ---- CALCULATION FUNCTIONS ----
 
@@ -364,7 +366,11 @@ def gen_out(in_a, new_length):
         if j < new_length:
             out_a[j] = in_a[i]
 
+    del[in_a]
+
     return out_a, old_length, step
+
+# ---- VIDEO FUNCTIONS ----
 
 # dup mode: the frame i is equal to frame i-1 (his predecessor)
 def dup(in_a, new_length):
@@ -407,25 +413,19 @@ def blend(in_a, new_length):
             else:
                 j = i * step
                 if j < new_length:
-                    #print(j)
                     tmp = out_a[j-step:j+1]
                     # for every chunk, calculate the average
                     for z in range(len(tmp)):
                         if tmp[z] is None:
-                            #print("index: ", z-1, j)
                             tmp[z] = np.mean(np.array([tmp[z-1],tmp[-1]], dtype='object'), axis=0).astype('uint8')
-                    #print(tmp)
             MainWindow.updateProgressBar(mw, normalize(i,0,new_length-1))
         tmp = out_a[new_length-step:new_length]
-        # print(tmp)
         # remaining odd frames: average with black
         for i in range(len(tmp)):
             if i == 0: pass
             else:
-                #print(i)
                 zero_shape = tmp[i-1].shape
                 tmp[i] = np.mean(np.array([tmp[i-1],np.zeros(zero_shape)], dtype='object'), axis=0).astype('uint8')
-        #print(out_a[new_length-step:new_length])
 
     return out_a
 
@@ -544,43 +544,13 @@ def gen_reduced_out(in_a, new_length):
     out_a = np.array(out_a)
     return out_a
 
+# opencv video reader suffers of memory leaks: pims is better
+def read_video(filepath):      
+    frames = pims.Video(filepath)
+    size = (frames.frame_shape[1],frames.frame_shape[0])
+    fps_in = int(frames.frame_rate)
 
-# ---- VIDEO FUNCTIONS ----
-
-def input_video(filepath):
-    in_vid = cv2.VideoCapture(filepath)
-    width = int(in_vid.get(3))                                                      # le info sulle dimensioni wxh stanno rispettivamente alle posizioni 3 e 4 dell'header
-    height = int(in_vid.get(4))
-    fps_in = int(round(in_vid.get(5)))
-    frame_in_count = int(in_vid.get(cv2.CAP_PROP_FRAME_COUNT))
-    duration_in = frame_in_count/fps_in
-    size = (width, height)
-
-    return in_vid, size, fps_in
-
-#@profile
-def read_video(filepath):
-    in_vid, size, fps_in = input_video(filepath)
-
-    frames_in = []
-
-    while (in_vid.isOpened()):
-        ret, frame = in_vid.read()
-        if ret:
-            if (frame is not None):
-                frames_in.append(frame)
-                del(frame)
-                gc.collect()
-        else: break
-    
-    in_vid.release()
-    return frames_in, size, fps_in
-
-def generate_video(filepath, fps_output, size):
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')                                                # mp4v is the best encoder until now (mpg4 gave too much large output files)
-    output_video = cv2.VideoWriter(filepath, fourcc, fps_output, size, isColor = True)
-
-    return output_video
+    return frames, size, fps_in
 
 
 # ---- MAIN EXECUTION ----

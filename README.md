@@ -6,11 +6,15 @@ This Python program simulates *ffmpeg*'s `minterpolate` command.
 ## Requirements
 After cloning this repo, in order execute the program in your Python environment you need to install the following modules using `pip`:
 * numpy
+* pims
+* scikit-video
 * opencv
 * pyqt5
 
 ```bash
 pip install numpy
+pip install pims
+pip install scikit-video
 pip install opencv-python-headless
 pip install pyqt5
 ```
