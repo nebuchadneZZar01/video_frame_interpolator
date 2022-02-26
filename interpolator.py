@@ -2,14 +2,14 @@
  # @author nebuchadnezzar
  # @email michele.ferro1998@libero.it
  # @create date 03-11-2021 12:51:37
- # @modify date 25-02-2022 15:32:27
+ # @modify date 26-02-2022 14:26:17
  # @desc video interpolation project (subject: Multimedia)
 """
 import os
 import numpy as np
 import cv2
 import gc
-from memory_profiler import profile
+#from memory_profiler import profile
 
 from PyQt5 import QtCore, QtGui, QtWidgets as qtw
 from PyQt5 import QtMultimedia as qtm
@@ -47,10 +47,10 @@ class MainWindow(qtw.QWidget):
         layout.addWidget(self.btn,6,2)
 
         self.setWindowTitle(title)
-        self.setFixedSize(self.size())
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
         self.setLayout(layout)
         self.show()
+        self.setFixedSize(self.size())                                      # actual size is defined after the creation of the window, so i set it here
 
     # UI CREATION FUNCTIONS
 
@@ -146,11 +146,13 @@ class MainWindow(qtw.QWidget):
     def callHelp(self):
         self.help = HelpWindow()
         self.help.show()
+        self.help.setFixedSize(self.compare.size())
 
     # calls compare window
     def callCompare(self):
         self.compare = CompareWindow()
         self.compare.show()
+        self.compare.setFixedSize(self.compare.size())
     
     # disables the GUI when there is not an input file
     def disableInput(self):
@@ -251,7 +253,6 @@ class HelpWindow(qtw.QWidget):
         super().__init__()
         layout = qtw.QVBoxLayout()
         self.setWindowTitle("Help")
-        self.setFixedSize(self.size())
         
         self.setWindowFlag(QtCore.Qt.WindowMaximizeButtonHint, False)
         self.setWindowFlag(QtCore.Qt.WindowMinimizeButtonHint, False)
