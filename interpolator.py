@@ -8,9 +8,8 @@
 import os
 import numpy as np
 import pims                                                                     # to read files
-import skvideo.io as skv                                                        # to write files (better compatibility, don't suffers of memory leaks)
 import cv2                                                                      # for mci functions
-from memory_profiler import profile
+#from memory_profiler import profile
 
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets as qtw
 from PyQt5 import QtMultimedia as qtm
@@ -238,11 +237,10 @@ class MainWindow(qtw.QWidget):
 
             self.frames_out = gen_reduced_out(self.frames_in, l_frames_out)
 
-        output_video = skv.FFmpegWriter(self.fdir, inputdict={'-r': str(self.fps_spinbox.value())})
+        output_video = generate_video(self.fdir, self.fps_spinbox.value(), self.size)
 
         for f in self.frames_out:
-            output_video.writeFrame(f)
-        output_video.close()
+            output_video.write(f)
         
         del(self.frames_out)                                                                        # to prevent memory leak of output array
 
@@ -546,12 +544,23 @@ def gen_reduced_out(in_a, new_length):
 
 # opencv video reader suffers of memory leaks: pims is better
 def read_video(filepath):      
-    frames = pims.Video(filepath)
-    size = (frames.frame_shape[1],frames.frame_shape[0])
-    fps_in = int(frames.frame_rate)
+    frames_rgb = pims.Video(filepath)
+    size = (frames_rgb.frame_shape[1],frames_rgb.frame_shape[0])
+    fps_in = int(frames_rgb.frame_rate)
+    frames_bgr = []
 
-    return frames, size, fps_in
+    for frame in frames_rgb:
+        frames_bgr.append(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
 
+    del[frames_rgb]
+
+    return frames_bgr, size, fps_in
+
+def generate_video(filepath, fps_output, size):
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')                                                # mp4v is the best encoder until now (mpg4 gave too much large output files)
+    output_video = cv2.VideoWriter(filepath, fourcc, fps_output, size, isColor = True)
+
+    return output_video
 
 # ---- MAIN EXECUTION ----
 app = qtw.QApplication([])
