@@ -13,6 +13,7 @@ After cloning this repo, in order execute the program in your Python environment
 ```bash
 pip install numpy
 pip install pims
+pip install av
 pip install opencv-python-headless
 pip install pyqt5
 ```
