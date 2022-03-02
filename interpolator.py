@@ -2,14 +2,13 @@
  # @author nebuchadnezzar
  # @email michele.ferro1998@libero.it
  # @create date 03-11-2021 12:51:37
- # @modify date 26-02-2022 20:26:17
+ # @modify date 01-03-2022 15:17:23
  # @desc video interpolation project (subject: Multimedia)
 """
 import os
 import numpy as np
 import pims                                                                     # to read files
 import cv2                                                                      # for mci functions
-#from memory_profiler import profile
 
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets as qtw
 from PyQt5 import QtMultimedia as qtm
